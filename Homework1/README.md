@@ -1,3 +1,16 @@
+*Emil Milanov & Boyan Hristov*
+
+# Homework 1
+
+## Exercise 1
+
+![](Screenshots/roscore.png)
+
+## Exercise 2
+
+![boiii](Screenshots/simulatorInitial.png)\
+
+
 ## Exercise 3
 
 ### Topics starting with /camera
@@ -21,3 +34,4 @@ Command used: rostopic list /camera
 - /camera/rgb/image_raw/theora/parameter_descriptions
 - /camera/rgb/image_raw/theora/parameter_updates
 
+![](Screenshots/simulator.png)
