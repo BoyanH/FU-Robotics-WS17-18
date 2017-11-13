@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 
-import rospy
-from std_msgs.msg import String
-from sensor_msgs.msg import Image, CompressedImage
-from cv_bridge import CvBridge
-import cv2
-import os
-from sklearn.cluster import KMeans
 from copy import deepcopy
+from cv_bridge import CvBridge
+from sensor_msgs.msg import Image, CompressedImage
+from sklearn.cluster import KMeans
+from std_msgs.msg import String
+import cv2
+import numpy as np
+import os
+import rospy
 
 
 gray_scale_topic = '/app/camera/gray_scale/image_raw'
@@ -39,6 +40,33 @@ class ImageProcessor:
         return (min_x, max_y)
 
     def get_camera_location_and_orientation(self, image_data):
+        # we need to do some refractoring, but this will do
+        # also save the white pixel points as a class property
+        self.square_coordinates = self.get_square_coordinates(image_data)
+
+    def rotation_translation_vector(self):
+        world_coords = np.array([[0,60,0],
+                                 [20,60,0],
+                                 [0,30,0],
+                                 [20,30,0],
+                                 [0,0,0],
+                                 [20,0,0]], dtype=np.float32)
+        screen_coords = np.array(self.square_coordinates)
+
+        intr_param = np.array(  [[614.1699, 0, 329.9491],
+                                [0, 614.9002, 237.2788],
+                                [0,0,1]], dtype=np.float32)
+        dist_param = np.array([0.1115, -0.1089, 0,0], dtype=np.float32)
+
+        rotation_vec = np.empty(shape=[3,1])
+        translation_vec = np.empty(shape=[3,1])
+
+        cv2.solvePnP(world_coords, screen_coords, intr_param, dist_param, rotation_vec, translation_vec)
+
+        rospy.loginfo("Rot. vec: %s, Trans. vec: %s" % (rotation_vec, translation_vec))
+
+
+    def get_square_coordinates(self, image_data):
         bw_image = self.process_image(image_data)
         white_points_coordinates = []
 
@@ -73,6 +101,7 @@ class ImageProcessor:
         cv2.imwrite(marked_save_path, marked_img)
 
         rospy.loginfo(square_coordinates)
+        return square_coordinates
 
     def process_image(self, image_data):
         # convert image to openCv grayscale image
@@ -116,6 +145,7 @@ class ImageProcessor:
         if not self.image_processed or self.stream_gray_image:
             self.image_processed = True
             self.get_camera_location_and_orientation(data)
+            self.rotation_translation_vector()
 
 
 def camera_processor():
