@@ -71,7 +71,7 @@ def scan_callback(scan_msg):
         inited = True
         start_experiment()
         initial_time = rospy.get_time()
-    elif rospy.get_time() - initial_time > 20:
+    elif rospy.get_time() - initial_time > 10:
         pub_speed.publish(0)
 
     calibrated_angle = get_calibrated_steering(90)
